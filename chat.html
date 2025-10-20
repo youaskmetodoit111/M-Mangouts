@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>M+ Mangouts — Chat</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="chat-screen">
+    <h2>Welcome to M+ Mangouts</h2>
+    <div id="user-info"></div>
+    <div id="chat-box"></div>
+    <input type="text" id="message-input" placeholder="Type your message...">
+    <button id="send-button">Send</button>
+  </div>
+
+  <script>
+    // Retrieve viewer glyph from localStorage
+    const viewerName = localStorage.getItem("viewerName");
+    const viewerTitle = localStorage.getItem("viewerTitle");
+    const viewerDescription = localStorage.getItem("viewerDescription");
+
+    if (!viewerName || !viewerTitle || !viewerDescription) {
+      window.location.href = "index.html"; // Redirect if glyph missing
+    } else {
+      document.getElementById("user-info").innerHTML =
+        `<strong>${viewerName}</strong> — ${viewerTitle}<br><em>${viewerDescription}</em>`;
+    }
+
+    // WebSocket breath
+    const socket = new WebSocket("ws://localhost:8080");
+
+    // Receive messages
+    socket.onmessage = function(event) {
+      const chatBox = document.getElementById("chat-box");
+      const messageElement = document.createElement("p");
+      messageElement.textContent = event.data;
+      chatBox.appendChild(messageElement);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    };
+
+    // Send messages
+    document.getElementById("send-button").addEventListener("click", function() {
+      const input = document.getElementById("message-input");
+      const message = input.value.trim();
+
+      if (message) {
+        const fullMessage = `${viewerName} (${viewerTitle}): ${message}`;
+        socket.send(fullMessage);
+        input.value = "";
+      }
+    });
+  </script>
+</body>
+</html>
